@@ -2,7 +2,7 @@
 """
 SSVEP offline analysis.
 """
-from metabci.brainda.algorithms.decomposition import FBTDCA
+from metabci.brainda.algorithms.decomposition import FBTDCA, FBTRCA
 from sklearn.base import BaseEstimator, ClassifierMixin
 from metabci.brainda.paradigms import SSVEP
 from metabci.brainda.algorithms.utils.model_selection import (
@@ -67,20 +67,28 @@ def train_model(X, y, srate=1000):
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
 
     # 滤波器组设置
+    # wp = [
+    #     [6, 88], [14, 88], [22, 88], [30, 88], [38, 88]
+    # ]
+    # ws = [
+    #     [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
+    # ]
     wp = [
-        [6, 88], [14, 88], [22, 88], [30, 88], [38, 88]
+        [16, 62], [23, 62], [31, 62], [39, 62], [46, 62], [54, 62]
     ]
     ws = [
-        [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
+        [14, 64], [21, 64], [29, 64], [37, 64], [44, 64], [52, 64]
     ]
-    filterweights = np.arange(1, 6)**(-1.25) + 0.25
+
+    # filterweights = np.arange(1, 6)**(-1.25) + 0.25
+    filterweights = np.arange(1, 6)**(-2.0) + 1.5
     filterbank = generate_filterbank(wp, ws, 256)
 
     freqs = np.arange(8, 16, 0.4)
     Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
-    model = FBTDCA(filterbank, padding_len=3, n_components=4,
+    model = FBTRCA(filterbank, n_components=1, ensemble=True,
                    filterweights=np.array(filterweights))
-    model = model.fit(X, y, Yf=Yf)
+    model = model.fit(X, y)
 
     return model
 
@@ -281,13 +289,14 @@ if __name__ == '__main__':
     srate = 1000
     # 截取数据的时间段
     stim_interval = [(0.14, 1.14)]
-    subjects = list(range(1, 2))
+    # subjects = list(range(1, 2))
+    subjects = list(('tll',))
     paradigm = 'ssvep'
 
     pick_chs = ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
     # //.datasets.py中按照metabci.brainda.datasets数据结构自定义数据类MetaBCIData
     # declare the dataset
-    dataset = MetaBCIData(
+    dataset = MetaBCIData(                  # 读取离线数据
         subjects=subjects, srate=srate,
         paradigm='ssvep', pattern='ssvep')
     paradigm = SSVEP(
@@ -296,6 +305,8 @@ if __name__ == '__main__':
         intervals=stim_interval,
         srate=srate)
     paradigm.register_raw_hook(raw_hook)
+    # 调用paradigms\base.py中BaseParadigm类的get_data()函数 --> 该函数调用self._get_single_subject_data()函数 --> 该函数调用brainda\datasets、base.py中BaseDataset类的get_data()函数
+    # --> 该函数调用brainflow_demos\datasets.py中子类MetaBCIData的_get_single_subject_data()函数 --> 该函数调用了该类的self.data_path函数获取cnt文件中的数据
     X, y, meta = paradigm.get_data(
         dataset,
         subjects=subjects,

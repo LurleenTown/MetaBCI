@@ -68,7 +68,7 @@ class RingBuffer(deque):
 
 
 class Marker(RingBuffer):
-    """Intercept online data.
+    """Intercept online data. 截取在线数据
     -author: Lichao Xu
     -Created on: 2021-04-01
     -update log:
@@ -90,6 +90,7 @@ class Marker(RingBuffer):
         if events is not None:
             self.interval = [int(i * srate) for i in interval]
             self.latency = 0 if self.interval[1] <= 0 else self.interval[1]
+            # 目的？？
             max_tlim = max(0, self.interval[0], self.interval[1])
             min_tlim = min(0, self.interval[0], self.interval[1])
             size = max_tlim - min_tlim
@@ -289,7 +290,7 @@ class NeuroScan(BaseAmplifier):
         self.neuro_link = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # the size of a package in neuroscan data is
         # srate/25*(num_chans+1)*4 bytes
-        self.pkg_size = srate / 25 * (num_chans + 1) * 4
+        self.pkg_size = srate / 25 * (num_chans + 1) * 4    # neuroscan中一个数据包的大小，bytes
         self.timeout = 2 * 25 / self.srate
 
     def _unpack_header(self, b_header):
@@ -310,7 +311,7 @@ class NeuroScan(BaseAmplifier):
         samples[:, :-1] = samples[:, :-1] * 0.0298 * 1e-6
         return samples.tolist()
 
-    def _recv(self, num_bytes):
+    def _recv(self, num_bytes):  # 获取指定大小的未解包的数据
         fragments = []
         b_count = 0
         while b_count < num_bytes:

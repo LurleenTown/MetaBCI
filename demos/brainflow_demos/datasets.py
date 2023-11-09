@@ -18,7 +18,8 @@ from metabci.brainda.utils.channels import upper_ch_names
 
 filepath_mi = "data\\mi"
 # 数据的相对路径
-filepath_ssvep = "data\\ssvep"
+# filepath_ssvep = "data\\ssvep"
+filepath_ssvep = "data"
 MetaBCIData_URL = {
     'imagery': os.path.join(os.path.dirname(__file__), filepath_mi),
     'ssvep': os.path.join(os.path.dirname(__file__), filepath_ssvep)
@@ -32,25 +33,30 @@ class MetaBCIData(BaseDataset):
             "right_hand": (2, (0, 4)),
             "both_hands": (3, (0, 4)),
         },
+        # 'ssvep': {
+        #     '1': (1, 'a'), '2': (2, 'b'), '3': (3, 'c'), '4': (4, 'd'),
+        #     '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'), '8': (8, 'h'),
+        #     '9': (9, 'i'), '10': (10, 'j'), '11': (11, 'k'), '12': (12, 'l'),
+        #     '13': (13, 'm'), '14': (14, 'n'), '15': (15, 'o'), '16': (16, 'p'),
+        #     '17': (17, 'q'), '18': (18, 'r'), '19': (19, 's'), '20': (20, 't'),
+        # }
         'ssvep': {
             '1': (1, 'a'), '2': (2, 'b'), '3': (3, 'c'), '4': (4, 'd'),
-            '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'), '8': (8, 'h'),
-            '9': (9, 'i'), '10': (10, 'j'), '11': (11, 'k'), '12': (12, 'l'),
-            '13': (13, 'm'), '14': (14, 'n'), '15': (15, 'o'), '16': (16, 'p'),
-            '17': (17, 'q'), '18': (18, 'r'), '19': (19, 's'), '20': (20, 't'),
+            '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'),
         }
     }
 
     _CHANNELS = {
         'imagery': ['FC3', 'FCZ', 'FC4', 'C3', 'CZ',
                     'C4', 'CP3', 'CPZ', 'CP4'],
-        'ssvep': ['Fp1', 'Fpz', 'Fp2', 'AF3', 'AF4', 'F7', 'F5', 'F3', 'F1',
-                  'Fz', 'F2', 'F4', 'F6', 'F8', 'FT7', 'FC5', 'FC3', 'FC1',
-                  'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'T7', 'C5', 'C3', 'C1',
-                  'Cz', 'C2', 'C4', 'C6', 'T8', 'TP7', 'CP5', 'CP3', 'CP1',
-                  'CPz', 'CP2', 'CP4', 'CP6', 'TP8', 'P7', 'P5', 'P3', 'P1',
-                  'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7', 'PO5', 'PO3', 'POz',
-                  'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
+        # 'ssvep': ['Fp1', 'Fpz', 'Fp2', 'AF3', 'AF4', 'F7', 'F5', 'F3', 'F1',
+        #           'Fz', 'F2', 'F4', 'F6', 'F8', 'FT7', 'FC5', 'FC3', 'FC1',
+        #           'FCz', 'FC2', 'FC4', 'FC6', 'FT8', 'T7', 'C5', 'C3', 'C1',
+        #           'Cz', 'C2', 'C4', 'C6', 'T8', 'TP7', 'CP5', 'CP3', 'CP1',
+        #           'CPz', 'CP2', 'CP4', 'CP6', 'TP8', 'P7', 'P5', 'P3', 'P1',
+        #           'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7', 'PO5', 'PO3', 'POz',
+        #           'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
+        'ssvep': ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
     }
 
     def __init__(self, subjects, srate, paradigm, pattern='imagery'):
@@ -84,12 +90,12 @@ class MetaBCIData(BaseDataset):
         elif self.pattern == 'p300':
             runs = list(range(1, 4))
         elif self.pattern == 'ssvep':
-            runs = list(range(1, 2))
+            runs = list(range(1, 4))
 
         base_url = MetaBCIData_URL[self.pattern]
         dests = []
         for sub in self.subjects:
-            dests.append(['{:s}\\sub{:d}\\{:d}.cnt'.format(
+            dests.append(['{:s}\\{:s}\\{:d}.cnt'.format(
                 base_url, sub, run) for run in runs])
         return dests
 

@@ -15,7 +15,7 @@ from metabci.brainda.algorithms.decomposition.base import (
     generate_filterbank, generate_cca_references)
 from metabci.brainda.algorithms.utils.model_selection import (
     EnhancedLeaveOneGroupOut)
-from metabci.brainda.algorithms.decomposition import FBTDCA
+from metabci.brainda.algorithms.decomposition import FBTRCA
 from metabci.brainda.utils import upper_ch_names
 from mne.io import read_raw_cnt
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -46,7 +46,7 @@ def read_data(run_files, chs, interval, labels):
     Xs, ys = [], []
     for run_file in run_files:
         raw = read_raw_cnt(run_file, preload=True, verbose=False)
-        raw = upper_ch_names(raw)
+        raw = upper_ch_names(raw)   # 大写channel名
         events = mne.events_from_annotations(
             raw, event_id=lambda x: int(x), verbose=False)[0]
         ch_picks = mne.pick_channels(raw.ch_names, chs, ordered=True)
@@ -73,24 +73,31 @@ def train_model(X, y, srate=1000):
     y = np.reshape(y, (-1))
     X = resample(X, up=256, down=srate)
 
+    # wp = [
+    #     [6, 88], [14, 88], [22, 88], [30, 88], [38, 88]
+    # ]
+    # ws = [
+    #     [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
+    # ]
     wp = [
-        [6, 88], [14, 88], [22, 88], [30, 88], [38, 88]
+        [16, 62], [23, 62], [31, 62], [39, 62], [46, 62], [54, 62]
     ]
     ws = [
-        [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
+        [14, 64], [21, 64], [29, 64], [37, 64], [44, 64], [52, 64]
     ]
 
-    filterweights = np.arange(1, 6)**(-1.25) + 0.25
+    # filterweights = np.arange(1, 6)**(-1.25) + 0.25
+    filterweights = np.arange(1, 6)**(-2.0) + 1.5
     filterbank = generate_filterbank(wp, ws, 256)
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
 
     freqs = np.arange(8, 16, 0.4)
     Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
-    model = FBTDCA(filterbank, padding_len=3, n_components=4,
+    model = FBTRCA(filterbank, n_components=1, ensemble=True,
                    filterweights=np.array(filterweights))
 
-    model = model.fit(X, y, Yf)
+    model = model.fit(X, y)
 
     return model
 
@@ -176,14 +183,14 @@ if __name__ == '__main__':
     srate = 1000
     # Data epoch duration, 0.14s visual delay was taken account
     stim_interval = [0.14, 0.68]
-    # Label types
+    # Label types，标签类型
     stim_labels = list(range(1, 21))
     cnts = 1
     # Data path
     filepath = "data\\train\\sub1"
     runs = list(range(1, cnts+1))
     run_files = ['{:s}\\{:d}.cnt'.format(
-        filepath, run) for run in runs]  
+        filepath, run) for run in runs]
     pick_chs = ['PZ', 'PO5', 'PO3', 'POZ',
                 'PO4', 'PO6', 'O1', 'OZ', 'O2']
 

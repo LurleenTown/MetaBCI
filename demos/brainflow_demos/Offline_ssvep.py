@@ -117,7 +117,7 @@ def offline_validation(X, y, srate=1000):
 
     kfold_accs = []
     # spliter = EnhancedLeaveOneGroupOut(return_validate=False)       # 留一法交叉验证
-    spliter = EnhancedStratifiedKFold(return_validate=False)       # 留一法交叉验证
+    spliter = EnhancedStratifiedKFold(return_validate=False)       # K折交叉验证
 
     for train_ind, test_ind in spliter.split(X, y=y):
         X_train, y_train = np.copy(X[train_ind]), np.copy(y[train_ind])
@@ -293,7 +293,7 @@ if __name__ == '__main__':
     # 放大器的采样率
     srate = 1000
     # 截取数据的时间段
-    stim_interval = [(0.14, 0.14+0.232)]
+    stim_interval = [(0.14, 0.14+1.05)]
     # subjects = list(range(1, 2))
     subjects = list(('tll',))
     paradigm = 'ssvep'

@@ -326,8 +326,8 @@ if __name__ == '__main__':
     print("Current Model accuracy:{:.2f}".format(acc))
 
     # 时域分析
-    # time_feature(X[..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
+    time_feature(X[..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
     # 频域分析
-    # frequency_feature(X[..., :int(srate)], pick_chs, '11', 'OZ', -2, srate)
+    # frequency_feature(X[..., :int(srate)], pick_chs, '1', 'OZ', -2, srate)
     # 时频域分析
     # time_frequency_feature(X[...,:srate], y,pick_chs)

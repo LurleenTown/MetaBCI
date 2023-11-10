@@ -14,7 +14,7 @@ from metabci.brainflow.workers import ProcessWorker
 from metabci.brainda.algorithms.decomposition.base import (
     generate_filterbank, generate_cca_references)
 from metabci.brainda.algorithms.utils.model_selection import (
-    EnhancedLeaveOneGroupOut)
+    EnhancedLeaveOneGroupOut, EnhancedStratifiedKFold)
 from metabci.brainda.algorithms.decomposition import FBTRCA
 from metabci.brainda.utils import upper_ch_names
 from mne.io import read_raw_cnt
@@ -71,7 +71,7 @@ def read_data(run_files, chs, interval, labels):
 
 def train_model(X, y, srate=1000):
     y = np.reshape(y, (-1))
-    X = resample(X, up=256, down=srate)
+    # X = resample(X, up=256, down=srate)
 
     # wp = [
     #     [6, 88], [14, 88], [22, 88], [30, 88], [38, 88]
@@ -87,13 +87,13 @@ def train_model(X, y, srate=1000):
     ]
 
     # filterweights = np.arange(1, 6)**(-1.25) + 0.25
-    filterweights = np.arange(1, 6)**(-2.0) + 1.5
-    filterbank = generate_filterbank(wp, ws, 256)
+    filterweights = np.arange(1, 7)**(-2.0) + 1.5
+    filterbank = generate_filterbank(wp, ws, 1000)
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
 
     freqs = np.arange(8, 16, 0.4)
-    Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
+    Yf = generate_cca_references(freqs, srate=1000, T=0.5, n_harmonics=5)
     model = FBTRCA(filterbank, n_components=1, ensemble=True,
                    filterweights=np.array(filterweights))
 
@@ -104,7 +104,7 @@ def train_model(X, y, srate=1000):
 
 def model_predict(X, srate=1000, model=None):
     X = np.reshape(X, (-1, X.shape[-2], X.shape[-1]))
-    X = resample(X, up=256, down=srate)
+    # X = resample(X, up=256, down=srate)
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
     p_labels = model.predict(X)
@@ -113,7 +113,8 @@ def model_predict(X, srate=1000, model=None):
 
 def offline_validation(X, y, srate=1000):
     y = np.reshape(y, (-1))
-    spliter = EnhancedLeaveOneGroupOut(return_validate=False)
+    # spliter = EnhancedLeaveOneGroupOut(return_validate=False)
+    spliter = EnhancedStratifiedKFold(return_validate=False)
 
     kfold_accs = []
     for train_ind, test_ind in spliter.split(X, y=y):
@@ -182,12 +183,13 @@ if __name__ == '__main__':
     # Sample rate EEG amplifier
     srate = 1000
     # Data epoch duration, 0.14s visual delay was taken account
-    stim_interval = [0.14, 0.68]
+    stim_interval = [0.14, 0.]
     # Label types，标签类型
-    stim_labels = list(range(1, 21))
-    cnts = 1
+    stim_labels = list(range(1, 8))
+    cnts = 3
     # Data path
-    filepath = "data\\train\\sub1"
+    # filepath = "data\\train\\sub1"
+    filepath = "data\\tll"
     runs = list(range(1, cnts+1))
     run_files = ['{:s}\\{:d}.cnt'.format(
         filepath, run) for run in runs]
@@ -211,9 +213,9 @@ if __name__ == '__main__':
     # worker.pre()
     # Set Neuroscan parameters
     ns = NeuroScan(
-        device_address=('192.168.1.30', 4000),
+        device_address=('192.168.1.5', 4000),
         srate=srate,
-        num_chans=68)
+        num_chans=21)
 
     # Start tcp connection with ns
     ns.connect_tcp()

@@ -95,7 +95,7 @@ class MetaBCIData(BaseDataset):
         base_url = MetaBCIData_URL[self.pattern]
         dests = []
         for sub in self.subjects:
-            dests.append(['{:s}\\{:s}\\{:d}.cnt'.format(
+            dests.append(['{:s}\\{:s}\\tll-m7-3{:d}.cnt'.format(
                 base_url, sub, run) for run in runs])
         return dests
 

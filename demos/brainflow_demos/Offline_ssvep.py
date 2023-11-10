@@ -6,7 +6,7 @@ from metabci.brainda.algorithms.decomposition import FBTDCA, FBTRCA
 from sklearn.base import BaseEstimator, ClassifierMixin
 from metabci.brainda.paradigms import SSVEP
 from metabci.brainda.algorithms.utils.model_selection import (
-    EnhancedLeaveOneGroupOut)
+    EnhancedLeaveOneGroupOut, EnhancedStratifiedKFold)
 from metabci.brainda.algorithms.decomposition.base import (
     generate_filterbank, generate_cca_references)
 from metabci.brainda.algorithms.feature_analysis.time_freq_analysis \
@@ -59,9 +59,10 @@ class MaxClassifier(BaseEstimator, ClassifierMixin):
 
 
 def train_model(X, y, srate=1000):
+    print("train the model")
     y = np.reshape(y, (-1))
     # 降采样
-    X = resample(X, up=256, down=srate)
+    # X = resample(X, up=256, down=srate)
     # 零均值单位方差 归一化
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
@@ -81,11 +82,11 @@ def train_model(X, y, srate=1000):
     ]
 
     # filterweights = np.arange(1, 6)**(-1.25) + 0.25
-    filterweights = np.arange(1, 6)**(-2.0) + 1.5
-    filterbank = generate_filterbank(wp, ws, 256)
+    filterweights = np.arange(1, 7)**(-2.0) + 1.5
+    filterbank = generate_filterbank(wp, ws, 1000)
 
     freqs = np.arange(8, 16, 0.4)
-    Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
+    Yf = generate_cca_references(freqs, srate=1000, T=0.5, n_harmonics=5)
     model = FBTRCA(filterbank, n_components=1, ensemble=True,
                    filterweights=np.array(filterweights))
     model = model.fit(X, y)
@@ -96,9 +97,10 @@ def train_model(X, y, srate=1000):
 
 
 def model_predict(X, srate=1000, model=None):
+    print("predict")
     X = np.reshape(X, (-1, X.shape[-2], X.shape[-1]))
     # 降采样
-    X = resample(X, up=256, down=srate)
+    # X = resample(X, up=256, down=srate)
     # 零均值单位方差 归一化
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
@@ -110,10 +112,13 @@ def model_predict(X, srate=1000, model=None):
 
 
 def offline_validation(X, y, srate=1000):
+    print("Start validation")
     y = np.reshape(y, (-1))
 
     kfold_accs = []
-    spliter = EnhancedLeaveOneGroupOut(return_validate=False)       # 留一法交叉验证
+    # spliter = EnhancedLeaveOneGroupOut(return_validate=False)       # 留一法交叉验证
+    spliter = EnhancedStratifiedKFold(return_validate=False)       # 留一法交叉验证
+
     for train_ind, test_ind in spliter.split(X, y=y):
         X_train, y_train = np.copy(X[train_ind]), np.copy(y[train_ind])
         X_test, y_test = np.copy(X[test_ind]), np.copy(y[test_ind])
@@ -288,7 +293,7 @@ if __name__ == '__main__':
     # 放大器的采样率
     srate = 1000
     # 截取数据的时间段
-    stim_interval = [(0.14, 1.14)]
+    stim_interval = [(0.14, 0.14+0.232)]
     # subjects = list(range(1, 2))
     subjects = list(('tll',))
     paradigm = 'ssvep'
@@ -305,7 +310,7 @@ if __name__ == '__main__':
         intervals=stim_interval,
         srate=srate)
     paradigm.register_raw_hook(raw_hook)
-    # 调用paradigms\base.py中BaseParadigm类的get_data()函数 --> 该函数调用self._get_single_subject_data()函数 --> 该函数调用brainda\datasets、base.py中BaseDataset类的get_data()函数
+    # 调用paradigms\base.py中BaseParadigm类的get_data()函数 --> 该函数调用self._get_single_subject_data()函数 --> 该函数调用brainda\datasets\base.py中BaseDataset类的get_data()函数
     # --> 该函数调用brainflow_demos\datasets.py中子类MetaBCIData的_get_single_subject_data()函数 --> 该函数调用了该类的self.data_path函数获取cnt文件中的数据
     X, y, meta = paradigm.get_data(
         dataset,
@@ -321,8 +326,8 @@ if __name__ == '__main__':
     print("Current Model accuracy:{:.2f}".format(acc))
 
     # 时域分析
-    time_feature(X[..., :int(srate)], meta, dataset, '11', ['OZ'])  # 1s
+    # time_feature(X[..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
     # 频域分析
-    frequency_feature(X[..., :int(srate)], pick_chs, '11', 'OZ', -2, srate)
+    # frequency_feature(X[..., :int(srate)], pick_chs, '11', 'OZ', -2, srate)
     # 时频域分析
     # time_frequency_feature(X[...,:srate], y,pick_chs)

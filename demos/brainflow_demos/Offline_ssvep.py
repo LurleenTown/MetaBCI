@@ -73,12 +73,22 @@ def train_model(X, y, srate=1000):
     ws = [
         [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
     ]
+<<<<<<< Updated upstream
     filterweights = np.arange(1, 6)**(-1.25) + 0.25
+=======
+
+    # filterweights = np.arange(1, 6)**(-1.25) + 0.25
+    filterweights = np.arange(1, 6)**(-2.0) + 1.5
+>>>>>>> Stashed changes
     filterbank = generate_filterbank(wp, ws, 256)
 
     freqs = np.arange(8, 16, 0.4)
     Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
+<<<<<<< Updated upstream
     model = FBTDCA(filterbank, padding_len=3, n_components=4,
+=======
+    model = FBTRCA(filterbank, n_components=1, ensemble=True,
+>>>>>>> Stashed changes
                    filterweights=np.array(filterweights))
     model = model.fit(X, y, Yf=Yf)
 
@@ -281,7 +291,12 @@ if __name__ == '__main__':
     srate = 1000
     # 截取数据的时间段
     stim_interval = [(0.14, 1.14)]
+<<<<<<< Updated upstream
     subjects = list(range(1, 2))
+=======
+    # subjects = list(range(1, 2))
+    subjects = list(('tll',))
+>>>>>>> Stashed changes
     paradigm = 'ssvep'
 
     pick_chs = ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
@@ -296,6 +311,11 @@ if __name__ == '__main__':
         intervals=stim_interval,
         srate=srate)
     paradigm.register_raw_hook(raw_hook)
+<<<<<<< Updated upstream
+=======
+    # 调用paradigms\base.py中BaseParadigm类的get_data()函数 --> 该函数调用self._get_single_subject_data()函数 --> 该函数调用brainda\datasets、base.py中BaseDataset类的get_data()函数
+    # --> 该函数调用brainflow_demos\datasets.py中子类MetaBCIData的_get_single_subject_data()函数 --> 该函数调用了该类的self.data_path函数获取cnt文件中的数据
+>>>>>>> Stashed changes
     X, y, meta = paradigm.get_data(
         dataset,
         subjects=subjects,

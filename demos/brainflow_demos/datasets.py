@@ -89,7 +89,11 @@ class MetaBCIData(BaseDataset):
         base_url = MetaBCIData_URL[self.pattern]
         dests = []
         for sub in self.subjects:
+<<<<<<< Updated upstream
             dests.append(['{:s}\\sub{:d}\\{:d}.cnt'.format(
+=======
+            dests.append(['{:s}\\{:s}\\{:d}.cnt'.format(
+>>>>>>> Stashed changes
                 base_url, sub, run) for run in runs])
         return dests
 

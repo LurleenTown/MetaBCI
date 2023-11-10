@@ -15,7 +15,11 @@ from metabci.brainda.algorithms.decomposition.base import (
     generate_filterbank, generate_cca_references)
 from metabci.brainda.algorithms.utils.model_selection import (
     EnhancedLeaveOneGroupOut)
+<<<<<<< Updated upstream
 from metabci.brainda.algorithms.decomposition import FBTDCA
+=======
+from metabci.brainda.algorithms.decomposition import FBTRCA
+>>>>>>> Stashed changes
 from metabci.brainda.utils import upper_ch_names
 from mne.io import read_raw_cnt
 from sklearn.base import BaseEstimator, ClassifierMixin
@@ -80,14 +84,23 @@ def train_model(X, y, srate=1000):
         [4, 90], [12, 90], [20, 90], [28, 90], [36, 90]
     ]
 
+<<<<<<< Updated upstream
     filterweights = np.arange(1, 6)**(-1.25) + 0.25
+=======
+    # filterweights = np.arange(1, 6)**(-1.25) + 0.25
+    filterweights = np.arange(1, 6)**(-2.0) + 1.5
+>>>>>>> Stashed changes
     filterbank = generate_filterbank(wp, ws, 256)
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
 
     freqs = np.arange(8, 16, 0.4)
     Yf = generate_cca_references(freqs, srate=256, T=0.5, n_harmonics=5)
+<<<<<<< Updated upstream
     model = FBTDCA(filterbank, padding_len=3, n_components=4,
+=======
+    model = FBTRCA(filterbank, n_components=1, ensemble=True,
+>>>>>>> Stashed changes
                    filterweights=np.array(filterweights))
 
     model = model.fit(X, y, Yf)
@@ -176,7 +189,11 @@ if __name__ == '__main__':
     srate = 1000
     # Data epoch duration, 0.14s visual delay was taken account
     stim_interval = [0.14, 0.68]
+<<<<<<< Updated upstream
     # Label types
+=======
+    # Label types，标签类型
+>>>>>>> Stashed changes
     stim_labels = list(range(1, 21))
     cnts = 1
     # Data path

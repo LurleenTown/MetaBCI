@@ -308,7 +308,7 @@ class TimeAnalysis:
         plt.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
         plt.xlabel("time[s]")
         plt.ylabel("amplitude[μV]")
-        plt.legend()
+        plt.legend(loc="lower right")
         return loc, amp, ax
 
     def get_chan_id(self, ch_name, channels):

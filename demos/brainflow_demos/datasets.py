@@ -33,17 +33,16 @@ class MetaBCIData(BaseDataset):
             "right_hand": (2, (0, 4)),
             "both_hands": (3, (0, 4)),
         },
-        # 'ssvep': {
-        #     '1': (1, 'a'), '2': (2, 'b'), '3': (3, 'c'), '4': (4, 'd'),
-        #     '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'), '8': (8, 'h'),
-        #     '9': (9, 'i'), '10': (10, 'j'), '11': (11, 'k'), '12': (12, 'l'),
-        #     '13': (13, 'm'), '14': (14, 'n'), '15': (15, 'o'), '16': (16, 'p'),
-        #     '17': (17, 'q'), '18': (18, 'r'), '19': (19, 's'), '20': (20, 't'),
-        # }
         'ssvep': {
             '1': (1, 'a'), '2': (2, 'b'), '3': (3, 'c'), '4': (4, 'd'),
             '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'),
         }
+        # 'ssvep': {
+        #     '1': (1, 'a'), '2': (2, 'b'), '3': (3, 'c'), '4': (4, 'd'),
+        #     '5': (5, 'e'), '6': (6, 'f'), '7': (7, 'g'), '8': (8, 'h'),
+        #     '9': (9, 'i'), '10': (10, 'j'), '11': (11, 'k'), '12': (12, 'l'),
+        #     '13': (13, 'm'), '14': (14, 'n'), '15': (15, 'o'),
+        # }
     }
 
     _CHANNELS = {
@@ -56,7 +55,9 @@ class MetaBCIData(BaseDataset):
         #           'CPz', 'CP2', 'CP4', 'CP6', 'TP8', 'P7', 'P5', 'P3', 'P1',
         #           'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7', 'PO5', 'PO3', 'POz',
         #           'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
-        'ssvep': ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
+        # 'ssvep': ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
+        'ssvep': ['P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7',
+                  'PO5', 'PO3', 'POz', 'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
     }
 
     def __init__(self, subjects, srate, paradigm, pattern='imagery'):
@@ -90,12 +91,12 @@ class MetaBCIData(BaseDataset):
         elif self.pattern == 'p300':
             runs = list(range(1, 4))
         elif self.pattern == 'ssvep':
-            runs = list(range(1, 4))
+            runs = list(range(1, 6))
 
         base_url = MetaBCIData_URL[self.pattern]
         dests = []
         for sub in self.subjects:
-            dests.append(['{:s}\\{:s}\\tll-m7-3{:d}.cnt'.format(
+            dests.append(['{:s}\\{:s}\\ssvep-cs-{:d}.cnt'.format(
                 base_url, sub, run) for run in runs])
         return dests
 

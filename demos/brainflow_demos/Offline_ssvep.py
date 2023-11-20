@@ -2,7 +2,7 @@
 """
 SSVEP offline analysis.
 """
-from scipy.signal import sosfiltfilt, cheby1, cheb1ord
+from scipy.signal import sosfiltfilt, cheby1, cheb1ord, hilbert
 from metabci.brainda.algorithms.decomposition import FBTDCA, FBTRCA
 from sklearn.base import BaseEstimator, ClassifierMixin
 from metabci.brainda.paradigms import SSVEP
@@ -19,9 +19,12 @@ from metabci.brainda.algorithms.feature_analysis.time_analysis \
 from datasets import MetaBCIData
 from mne.filter import resample
 import matplotlib.pyplot as plt
+from scipy.fftpack import fft
 import numpy as np
 import warnings
 
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
+plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 warnings.filterwarnings('ignore')
 
 
@@ -29,9 +32,9 @@ warnings.filterwarnings('ignore')
 
 def raw_hook(raw, caches):
     # do something with raw object
-    raw.filter(7, 55, l_trans_bandwidth=2, h_trans_bandwidth=5,
-               phase='zero-double')
-    caches['raw_stage'] = caches.get('raw_stage', -1) + 1
+    # raw.filter(7, 55, l_trans_bandwidth=2, h_trans_bandwidth=5,
+    #            phase='zero-double')
+    # caches['raw_stage'] = caches.get('raw_stage', -1) + 1
     return raw, caches
 
 
@@ -67,11 +70,17 @@ def get_filter_data(X):
     X = X - np.mean(X, axis=-1, keepdims=True)
     X = X / np.std(X, axis=(-1, -2), keepdims=True)
 
+    # wp = [
+    #     [6, 88], [14, 88], [22, 88], [30, 88], [38, 88], [46, 88]
+    # ]
+    # ws = [
+    #     [4, 90], [12, 90], [20, 90], [28, 90], [36, 90], [44, 90]
+    # ]
     wp = [
-        [6, 88], [14, 88], [22, 88], [30, 88], [38, 88], [46, 88]
+        [4, 90], [12, 90], [20, 90], [28, 90], [36, 90], [44, 90]
     ]
     ws = [
-        [4, 90], [12, 90], [20, 90], [28, 90], [36, 90], [44, 90]
+        [2, 92], [10, 92], [18, 92], [26, 92], [34, 92], [42, 92]
     ]
 
     filterweights = np.arange(1, 7) ** (-2.0) + 1.5
@@ -94,7 +103,7 @@ def train_model(X, y, srate=1000):
 
     # 滤波器组设置
     wp = [
-        [6, 44], [14, 88], [22, 88], [30, 88], [38, 88], [46, 88]
+        [6, 88], [14, 88], [22, 88], [30, 88], [38, 88], [46, 88]
     ]
     ws = [
         [4, 90], [12, 90], [20, 90], [28, 90], [36, 90], [44, 90]
@@ -168,6 +177,29 @@ def time_feature(X, meta, dataset, event, channel, latency=0):
     # 计算模板信号调用TimeAnalysis.stacking_average()
     data_mean = Feature_R.stacking_average(np.squeeze(
         Feature_R.data[:, Feature_R.chan_ID, :]), _axis=0)
+
+    # fft #
+    N = 1000
+    fft_y = np.abs(fft(data_mean)) / N
+    normalization__half_c = fft_y[range(int(N / 5))]
+    x_ = np.arange(N)
+    half_x = x_[range(int(N / 5))]
+
+    plt.subplot(211)
+    plt.plot(x_, data_mean)
+    plt.title('原始波形')
+
+    plt.subplot(212)
+    plt.stem(half_x, normalization__half_c, 'blue')
+    plt.title('单边振幅谱(归一化)', fontsize=9, color='blue')
+    plt.show()
+
+    # 绘制plv图
+    # t = np.linspace(0, 1, int(1 * 1000))
+    # data_ref = np.sin(2 * np.pi * 9 * t + np.pi * 0)
+    # mean_plv = get_plv(data_ref, 8, 0)
+    # mean_plv = get_plv(data_mean, 8, 0)
+    # print(mean_plv)
     ax = plt.subplot(2, 1, 1)
     sample_num = int(Feature_R.fs * Feature_R.data_length)
     # 画出模板信号及其振幅调用TimeAnalysis.plot_single_trial()
@@ -325,9 +357,18 @@ def time_frequency_feature(X, y, chan_names, srate=1000):
     plt.show()
 
 
-def get_plv(x, x_template):
-    plv=abs(np.sum(np.exp((x-x_template).astype(complex)),axis=-1)/len(x))
-    print()
+def get_plv(f_x, t_freqs, t_phases, T=1, srate=1000):
+    t = np.linspace(0, T, int(T * srate))
+    f_template = np.sin(2 * np.pi * t_freqs * t + np.pi * t_phases)
+
+    amp_phi = np.angle(hilbert(f_x))  # 脑电信号振幅的相位
+    phase = np.angle(hilbert(f_template))
+    plv = np.abs(np.sum(np.exp(1j * (phase - amp_phi))) / len(phase))
+
+    # plt.plot(len(phase), observed_plv, 'blue')
+    # plt.title('PLV', fontsize=9, color='blue')
+    # plt.show()
+    return plv
 
 
 if __name__ == '__main__':
@@ -337,7 +378,7 @@ if __name__ == '__main__':
     # 截取数据的时间段
     stim_interval = [(0.14, 0.14 + 1)]
     # subjects = list(range(1, 2))
-    subjects = list(('hyn',))
+    subjects = list(('stn',))
     paradigm = 'ssvep'
 
     # pick_chs = ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
@@ -364,14 +405,14 @@ if __name__ == '__main__':
         verbose=False)
     y = label_encoder(y, np.unique(y))
     print("Loding data successfully")
-    X_filter = get_filter_data(X)
+    X_filter = get_filter_data(X)  # sub-band*trial*channel*sample
     # 计算离线正确率
     # acc = offline_validation(X, y, srate=srate)     # 计算离线准确率
     # print("Current Model accuracy:{:.2f}".format(acc))
 
     # 时域分析
-    time_feature(X_filter[0,  ..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
-    # time_feature(X_filter[1,  ..., :int(srate)], meta, dataset, '8', ['OZ'])  # 1s
+    # time_feature(X[..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
+    time_feature(X_filter[0, ..., :int(srate)], meta, dataset, '1', ['OZ'])  # 1s
     # 频域分析
     # frequency_feature(X[..., :int(srate)], pick_chs, '1', 'OZ', -2, srate)
     # 时频域分析

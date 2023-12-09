@@ -2,6 +2,7 @@ from metabci.brainflow.amplifiers import LSLInlet, DataInlet, MarkerInlet
 from typing import List
 import pylsl
 import numpy as np
+import math
 
 
 class LSLapps():
@@ -41,10 +42,10 @@ class LSLapps():
                 self.data_inlet = DataInlet(info)
             else:
                 print('Don\'t know what to do with stream ' + info.name())
-   
+
     def save_marker(self):
         n_marker = self.marker_data.shape[0]
-        self.marker_cache[self.marker_count:self.marker_count+n_marker]
+        self.marker_cache[self.marker_count:self.marker_count + n_marker]
         self.marker_count += n_marker
 
     def recv(self):
@@ -70,3 +71,28 @@ class LSLapps():
             return []
         else:
             return []
+
+
+def get_ITR(N=0, P=1, T=1.66):
+    if P == 1:
+        B = math.log2(N) + P * math.log2(P)
+    else:
+        B = math.log2(N) + P * math.log2(P) + (1 - P) * math.log2((1 - P) / (N - 1))
+    ITR = B * 60 / T
+    return ITR
+
+
+code_title = ['cvep-cs', 'ssvep-cs', 'cvep-vr', 'ssvep-vr']
+# sub_acc = [[0.92, 0.99, 0.92, 0.97], [0.95, 0.98, 0.92, 0.98], [0.82, 0.98, 0.94, 0.97], [0.90, 0.94, 0.91, 0.92], [0.80, 0.92, 0.87, 0.98]]
+sub_acc = [[[0.66, 0.83, 0.88, 0.92], [0.80, 0.98, 0.99, 0.99], [0.76, 0.86, 0.91, 0.92], [0.71, 0.91, 0.95, 0.97]],
+           [[0.72, 0.88, 0.94, 0.95], [0.75, 0.94, 0.97, 0.98], [0.74, 0.87, 0.91, 0.92], [0.78, 0.93, 0.98, 0.98]],
+           [[0.56, 0.72, 0.79, 0.82], [0.84, 0.97, 0.98, 0.98], [0.76, 0.88, 0.93, 0.94], [0.81, 0.94, 0.96, 0.97]],
+           [[0.58, 0.73, 0.84, 0.90], [0.52, 0.80, 0.88, 0.94], [0.73, 0.79, 0.87, 0.91], [0.62, 0.82, 0.91, 0.92]],
+           [[0.45, 0.61, 0.73, 0.80], [0.53, 0.79, 0.87, 0.92], [0.52, 0.72, 0.83, 0.87], [0.60, 0.89, 0.95, 0.98]]]
+itr = np.zeros((5, 4, 4))
+for sub_index in range(0, 5):
+    for code_index in range(0, 4):
+        for data_index in range(0, 4):
+            itr[sub_index, code_index, data_index] = get_ITR(N=15, P=sub_acc[sub_index][code_index][data_index], T=1 + 0.25 * (data_index + 1))
+
+print(itr)

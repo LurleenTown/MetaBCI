@@ -356,6 +356,7 @@ class TimeAnalysis:
         data_mean = np.mean(data, 0)
         plt.plot(t, data_mean, color=[1, 0, 0], linewidth=1.5, label="时域")
         plt.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
+        plt.ylim([-5, 5])
         plt.legend()
         plt.xlabel("time[s]")
         plt.ylabel("amplitude[μV]")

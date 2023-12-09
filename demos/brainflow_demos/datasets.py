@@ -9,6 +9,7 @@ TUNERL Datasets
 Weibo2014, Liang2020, Wei2020
 """
 import os
+import mne
 from typing import Union, Optional, Dict
 from pathlib import Path
 from mne.io import read_raw_cnt
@@ -56,8 +57,8 @@ class MetaBCIData(BaseDataset):
         #           'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7', 'PO5', 'PO3', 'POz',
         #           'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
         # 'ssvep': ['PZ', 'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'O1', 'OZ', 'O2']
-        'ssvep': ['P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'PO7',
-                  'PO5', 'PO3', 'POz', 'PO4', 'PO6', 'PO8', 'O1', 'Oz', 'O2']
+        'ssvep': ['P7', 'P5', 'P3', 'P1', 'PZ', 'P2', 'P4', 'P6', 'P8', 'PO7', 'CB2',
+                  'PO5', 'PO3', 'POZ', 'PO4', 'PO6', 'PO8', 'O1', 'OZ', 'O2', 'CB1']
     }
 
     def __init__(self, subjects, srate, paradigm, pattern='imagery'):
@@ -96,7 +97,7 @@ class MetaBCIData(BaseDataset):
         base_url = MetaBCIData_URL[self.pattern]
         dests = []
         for sub in self.subjects:
-            dests.append(['{:s}\\{:s}\\cvep-cs-{:d}.cnt'.format(
+            dests.append(['{:s}\\{:s}{:d}.cnt'.format(
                 base_url, sub, run) for run in runs])
         return dests
 
@@ -105,7 +106,10 @@ class MetaBCIData(BaseDataset):
             subject: Union[str, int],
             verbose: Optional[Union[bool, str, int]] = None):
         dests = self.data_path(subject)
-        montage = make_standard_montage('standard_1005')
+        # montage = make_standard_montage('standard_1005')
+        # montage.ch_names = [ch_name.upper() for ch_name in montage.ch_names]
+        dataset_path = '.\\data'
+        montage = mne.channels.read_custom_montage(os.path.join(dataset_path, '64-channels.loc'))
         montage.ch_names = [ch_name.upper() for ch_name in montage.ch_names]
 
         sess = dict()

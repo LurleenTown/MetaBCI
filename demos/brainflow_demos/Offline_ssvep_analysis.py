@@ -406,8 +406,8 @@ if __name__ == '__main__':
     srate = 1000
     n_target = 15
     cue_length = 1
-    sub_name = 'jhz'
-    pad_name = 'ssvep-vr-'
+    sub_name = 'ymm'
+    pad_name = 'ssvep-vr-middle-'
     data_length = 0.25
     for i in range(1, 5):
         # 截取数据的时间段

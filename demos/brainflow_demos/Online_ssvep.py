@@ -183,7 +183,7 @@ if __name__ == '__main__':
     # Sample rate EEG amplifier
     srate = 1000
     # Data epoch duration, 0.14s visual delay was taken account
-    stim_interval = [0.14, 0.]
+    stim_interval = [0.14, 0.64]
     # Label types，标签类型
     stim_labels = list(range(1, 8))
     cnts = 3
